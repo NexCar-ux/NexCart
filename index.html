@@ -1,0 +1,349 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="NexCart — discover products and order directly through WhatsApp.">
+<title>NexCart - Online Store</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#101010;color:white;font-family:Arial,sans-serif}
+header{background:#191919;padding:20px 7%;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #333}
+.logo{font-size:27px;font-weight:bold}.logo span{color:#ff702e}
+nav{display:flex;gap:20px;align-items:center}
+nav a{color:white;text-decoration:none;font-size:14px}
+button{cursor:pointer}
+.admin-btn,.main-btn{background:#ff702e;color:#111;border:0;padding:12px 18px;border-radius:6px;font-weight:bold}
+.hero{text-align:center;padding:100px 20px;background:radial-gradient(circle,#462416,#101010 70%)}
+.hero small{color:#ff702e;letter-spacing:3px}
+.hero h1{font-size:clamp(40px,7vw,65px);margin:20px}
+.hero h1 span{color:#ff702e}
+.hero p{color:#bbb;margin-bottom:25px;line-height:1.6}
+.products{padding:65px 7%}
+.products h2{font-size:32px;margin-bottom:25px}
+.filters{display:flex;gap:12px;margin-bottom:25px}
+input,select,textarea{background:#202020;color:white;border:1px solid #444;border-radius:6px;padding:13px;width:100%;outline:none}
+.filters input{flex:1}
+.filters select{max-width:200px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:20px}
+.card{background:#1c1c1c;border:1px solid #333;border-radius:10px;overflow:hidden}
+.card img{width:100%;height:200px;object-fit:cover}
+.card-content{padding:17px}
+.card h3{margin:10px 0}
+.card p{color:#aaa;font-size:13px;line-height:1.5;margin:10px 0}
+.category{color:#ff9b6b;font-size:12px}
+.price{font-weight:bold;font-size:17px}
+.order{background:#246b40;color:white;border:0;border-radius:5px;padding:12px;width:100%;margin-top:12px}
+.contact{margin:20px 7% 70px;padding:40px;background:#29180f;text-align:center;border-radius:10px}
+.contact p{color:#bbb;margin:15px}
+.contact a{display:inline-block;background:#25a85a;color:white;padding:13px 20px;border-radius:6px;text-decoration:none}
+footer{text-align:center;background:#191919;padding:35px;color:#aaa}
+footer h2{color:white;margin-bottom:10px}
+.modal{display:none;position:fixed;inset:0;background:#000c;z-index:10;justify-content:center;align-items:center;padding:15px}
+.modal.show{display:flex}
+.modal-box{position:relative;background:#1c1c1c;padding:30px;border-radius:12px;width:100%;max-width:650px;max-height:90vh;overflow:auto}
+.modal-box h2{margin-bottom:20px}
+.modal-box input,.modal-box textarea{margin:8px 0 14px;display:block}
+.modal-box label{font-size:13px;color:#ccc}
+.modal-box button.main-btn{margin:10px 0}
+.close{position:absolute;right:15px;top:10px;background:none;border:0;color:white;font-size:27px}
+#loginModal .modal-box{max-width:380px}
+#loginError{color:#ff7777;font-size:12px}
+.admin-item{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #444;gap:10px}
+.admin-item button{padding:7px;background:#333;color:white;border:1px solid #555;border-radius:4px;margin:2px}
+.admin-item .delete{color:#ff7777}
+#empty{color:#888;text-align:center;padding:40px}
+@media(max-width:600px){
+header{padding:16px 5%}nav{gap:10px}nav a{font-size:11px}
+.hero{padding:75px 15px}.products{padding:45px 5%}
+.filters{flex-direction:column}.filters select{max-width:none}
+.contact{margin:20px 5% 50px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">Nex<span>Cart</span></div>
+  <nav>
+    <a href="#home">Home</a>
+    <a href="#products">Products</a>
+    <a href="#contact">Contact</a>
+    <button class="admin-btn" onclick="openLogin()">Admin</button>
+  </nav>
+</header>
+
+<section class="hero" id="home">
+  <small>WELCOME TO NEXCART</small>
+  <h1>Shopping made <span>simple.</span></h1>
+  <p>Discover great products and order directly through WhatsApp.<br>No account required.</p>
+  <a href="#products"><button class="main-btn">Explore Products →</button></a>
+</section>
+
+<section class="products" id="products">
+  <h2>Our Products</h2>
+  <div class="filters">
+    <input id="search" placeholder="Search products..." oninput="render()">
+    <select id="category" onchange="render()">
+      <option value="all">All Categories</option>
+    </select>
+  </div>
+  <div class="grid" id="grid"></div>
+  <div id="empty">No products available yet.</div>
+</section>
+
+<section class="contact" id="contact">
+  <h2>Need help?</h2>
+  <p>Contact NexCart directly through WhatsApp.</p>
+  <a href="https://wa.me/94779117017" target="_blank">Chat on WhatsApp</a>
+  <p>077 911 7017</p>
+</section>
+
+<footer>
+  <h2>Nex<span style="color:#ff702e">Cart</span></h2>
+  <p>Simple shopping. Great products.</p>
+  <p>© 2026 NexCart</p>
+</footer>
+
+<!-- LOGIN -->
+<div class="modal" id="loginModal">
+  <div class="modal-box">
+    <button class="close" onclick="closeModal('loginModal')">×</button>
+    <h2>Admin Login</h2>
+    <input id="username" placeholder="Username">
+    <input id="password" type="password" placeholder="Password">
+    <p id="loginError"></p>
+    <button class="main-btn" onclick="login()">Login</button>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
+<div class="modal" id="adminModal">
+  <div class="modal-box">
+    <button class="close" onclick="closeModal('adminModal')">×</button>
+    <h2>Manage Products</h2>
+
+    <form id="productForm">
+      <input type="hidden" id="editId">
+
+      <label>Product Name</label>
+      <input id="name" required placeholder="Product name">
+
+      <label>Price (LKR)</label>
+      <input id="price" type="number" min="0" required placeholder="Price">
+
+      <label>Category</label>
+      <input id="cat" required placeholder="e.g. Groceries, Ayurveda">
+
+      <label>Description</label>
+      <textarea id="description" rows="4" placeholder="Product description"></textarea>
+
+      <label>Product Image</label>
+      <input id="image" type="file" accept="image/*">
+
+      <button class="main-btn" type="submit">Save Product</button>
+      <button type="button" onclick="resetForm()">Cancel Edit</button>
+    </form>
+
+    <h3 style="margin-top:25px">Your Products</h3>
+    <div id="adminList"></div>
+
+    <button class="admin-btn" onclick="logout()" style="margin-top:20px">Logout</button>
+  </div>
+</div>
+
+<script>
+const ADMIN_USER="nexcart";
+const ADMIN_PASS="Legend79@@";
+const WHATSAPP="94779117017";
+
+let products=[];
+try{
+  products=JSON.parse(localStorage.getItem("nexcart_products")||"[]");
+}catch(e){products=[]}
+
+const $=id=>document.getElementById(id);
+
+function save(){
+  try{
+    localStorage.setItem("nexcart_products",JSON.stringify(products));
+    return true;
+  }catch(e){
+    alert("Storage full. Please use a smaller image.");
+    return false;
+  }
+}
+
+function safe(s){
+  return String(s??"").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  })[c]);
+}
+
+function openLogin(){
+  $("loginError").textContent="";
+  $("username").value="";
+  $("password").value="";
+  $("loginModal").classList.add("show");
+}
+
+function closeModal(id){
+  $(id).classList.remove("show");
+}
+
+function login(){
+  if($("username").value===ADMIN_USER &&
+     $("password").value===ADMIN_PASS){
+    closeModal("loginModal");
+    $("adminModal").classList.add("show");
+    renderAdmin();
+  }else{
+    $("loginError").textContent="Incorrect username or password!";
+  }
+}
+
+function logout(){
+  closeModal("adminModal");
+  resetForm();
+}
+
+function render(){
+  let search=$("search").value.toLowerCase();
+  let selected=$("category").value;
+
+  let categories=[...new Set(products.map(p=>p.category))];
+
+  $("category").innerHTML='<option value="all">All Categories</option>'+
+    categories.map(c=>`<option value="${safe(c)}">${safe(c)}</option>`).join("");
+
+  if(categories.includes(selected)) $("category").value=selected;
+
+  let filtered=products.filter(p=>
+    (p.name+" "+p.category+" "+p.description).toLowerCase().includes(search)&&
+    ($("category").value==="all"||p.category===$("category").value)
+  );
+
+  $("empty").style.display=filtered.length?"none":"block";
+
+  $("grid").innerHTML=filtered.map(p=>`
+    <div class="card">
+      ${p.image?`<img src="${p.image}" alt="${safe(p.name)}">`:""}
+      <div class="card-content">
+        <span class="category">${safe(p.category)}</span>
+        <h3>${safe(p.name)}</h3>
+        <p>${safe(p.description)}</p>
+        <div class="price">LKR ${Number(p.price).toLocaleString()}</div>
+        <button class="order" onclick="order('${safe(p.id)}')">Order on WhatsApp ↗</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function order(id){
+  let p=products.find(x=>x.id===id);
+  if(!p)return;
+  let message=`Hello NexCart! I want to order ${p.name}. Price: LKR ${p.price}`;
+  window.open(`https://wa.me/${WHATSAPP}?text=${encodeURIComponent(message)}`,"_blank");
+}
+
+function renderAdmin(){
+  $("adminList").innerHTML=products.map(p=>`
+    <div class="admin-item">
+      <span>${safe(p.name)} - LKR ${Number(p.price).toLocaleString()}</span>
+      <span>
+        <button onclick="editProduct('${safe(p.id)}')">Edit</button>
+        <button class="delete" onclick="deleteProduct('${safe(p.id)}')">Delete</button>
+      </span>
+    </div>
+  `).join("")||"<p style='color:#aaa;padding:15px'>No products yet.</p>";
+}
+
+function editProduct(id){
+  let p=products.find(x=>x.id===id);
+  if(!p)return;
+  $("editId").value=p.id;
+  $("name").value=p.name;
+  $("price").value=p.price;
+  $("cat").value=p.category;
+  $("description").value=p.description;
+}
+
+function deleteProduct(id){
+  const product=products.find(p=>p.id===id);
+  if(!product)return;
+  if(!confirm(`Are you sure you want to delete "${product.name}"?`))return;
+
+  const previousProducts=products;
+  products=products.filter(p=>p.id!==id);
+  if(save()){
+    if($("editId").value===id) resetForm();
+    render();
+    renderAdmin();
+    alert("Product deleted successfully.");
+  }else{
+    products=previousProducts;
+  }
+}
+
+function resetForm(){
+  $("productForm").reset();
+  $("editId").value="";
+}
+
+$("productForm").addEventListener("submit",async function(e){
+  e.preventDefault();
+
+  let id=$("editId").value;
+  let existing=products.find(p=>p.id===id);
+  let file=$("image").files[0];
+  let img=existing?.image||"";
+
+  if(file){
+    if(!file.type.startsWith("image/")||file.size>2.5*1024*1024){
+      alert("Please use an image smaller than 2.5 MB.");
+      return;
+    }
+    img=await new Promise((resolve,reject)=>{
+      let reader=new FileReader();
+      reader.onload=()=>resolve(reader.result);
+      reader.onerror=reject;
+      reader.readAsDataURL(file);
+    });
+  }
+
+  let product={
+    id:existing?.id||(crypto.randomUUID?crypto.randomUUID():String(Date.now())),
+    name:$("name").value.trim(),
+    price:Number($("price").value),
+    category:$("cat").value.trim(),
+    description:$("description").value.trim(),
+    image:img
+  };
+
+  if(!product.name||!product.category||product.price<0){
+    alert("Please check product details.");
+    return;
+  }
+
+  if(existing){
+    products=products.map(p=>p.id===id?product:p);
+  }else{
+    products.unshift(product);
+  }
+
+  if(save()){
+    resetForm();
+    render();
+    renderAdmin();
+    alert("Product saved!");
+  }
+});
+
+render();
+</script>
+
+</body>
+</html>
